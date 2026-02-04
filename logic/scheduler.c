@@ -41,5 +41,17 @@ void fcfs() {
             }
         }
     }
-    
+
+    for(int i=0; i < n; i++){
+        if(curr_time < processes[i].at){
+            curr_time = processes[i].at;
+        }
+
+        processes[i].ct = curr_time + processes[i].bt;
+        processes[i].tat = processes[i].ct - processes[i].at;
+        processes[i].wt = processes[i].tat - processes[i].bt;
+        add_gantt(processes[i].pid, curr_time, curr_time + processes[i].bt);
+        curr_time += processes[i].bt;
+        processes[i].completed = 1;
+    }
 }
