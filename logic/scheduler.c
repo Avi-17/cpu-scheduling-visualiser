@@ -93,3 +93,51 @@ void sjf(){
         completed++;
     }
 }
+
+void srtf(){
+    int current_time = 0;
+    int is_completed[n];
+    for(int i = 0; i<n; i++){
+        is_completed[i] = 0;
+
+    }
+    int completed = 0;
+    while(completed < n){
+        int idx = -1;
+        int min_rt = INT_MAX;
+        for(int i = 0; i<n; i++){
+            if(processes[i].at<=current_time && !is_completed[i]){
+                if(processes[i].rt < min_rt){
+                    min_rt = processes[i].rt;
+                    idx = i;
+                } 
+                else if(processes[i].rt == min_rt){
+                    if(processes[i].at < processes[idx].at){
+                        idx = i;
+                    }
+                }
+            }
+        }
+        if(idx == -1){
+            current_time++;
+            continue;
+        }else{
+            processes[idx].rt--;
+            add_gantt(processes[idx].pid, current_time, current_time + 1);
+            current_time++;
+            
+            if(processes[idx].rt == 0){
+                processes[idx].ct = current_time;
+                processes[idx].tat = processes[idx].ct - processes[idx].at;
+                processes[idx].wt = processes[idx].tat - processes[idx].bt;
+                is_completed[idx] = 1;
+                completed++;
+            }
+        }
+
+
+        }
+
+
+    }
+

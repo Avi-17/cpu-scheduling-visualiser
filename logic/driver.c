@@ -23,7 +23,7 @@ int main() {
         printf("%d\t%d\t%d\n", processes[i].pid, processes[i].at, processes[i].bt);
     }
 
-    printf("Enter algorithm (FCFS, SJF): ");
+    printf("Enter algorithm (FCFS, SJF, SRTF): ");
     scanf("%s", choice);
 
     if (strcmp(choice, "FCFS") == 0 || strcmp(choice, "fcfs") == 0) {
@@ -34,6 +34,10 @@ int main() {
         printf("\nRunning SJF...\n");
         sjf();
     } 
+    else if (strcmp(choice, "SRTF") == 0 || strcmp(choice, "srtf") == 0) {
+        printf("\nRunning SRTF...\n");
+        srtf();
+    }
     else {
         printf("\nInvalid choice! Defaulting to FCFS...\n");
         fcfs();
