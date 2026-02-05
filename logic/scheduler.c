@@ -55,3 +55,41 @@ void fcfs() {
         processes[i].completed = 1;
     }
 }
+
+void sjf(){
+    int current_time = 0;
+    int is_completed[n];
+    for(int i = 0; i < n; i++){
+        is_completed[i] = 0;
+    }
+    int completed = 0;
+    
+    while(completed < n){
+        int idx = -1;
+        int min_bt = INT_MAX;
+        for(int i = 0; i < n; i++){
+            if(processes[i].at <= current_time && !is_completed[i]){
+                if(processes[i].bt < min_bt){
+                    min_bt = processes[i].bt;
+                    idx = i;
+                } else if(processes[i].bt == min_bt){
+                    if(processes[i].at < processes[idx].at){
+                        idx = i;
+                    }
+                }
+            }
+        }
+        if(idx == -1){
+            current_time++;
+            continue;
+        }
+
+        processes[idx].ct = current_time + processes[idx].bt;
+        processes[idx].tat = processes[idx].ct - processes[idx].at;
+        processes[idx].wt = processes[idx].tat - processes[idx].bt;
+        add_gantt(processes[idx].pid, current_time, current_time + processes[idx].bt);
+        current_time = processes[idx].ct;
+        is_completed[idx] = 1;
+        completed++;
+    }
+}

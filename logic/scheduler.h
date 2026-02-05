@@ -11,6 +11,7 @@ extern int gantt_count;
 void reset_scheduler();
 void fcfs();
 void srtf();
+void sjf();
 void compute_metric();
 void write_output(const char* filename);
 
