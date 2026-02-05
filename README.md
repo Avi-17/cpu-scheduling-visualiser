@@ -15,7 +15,7 @@ cpu-scheduling-visualiser/
     ├── driver.c      # Driver program to run the scheduler
     ├── process.c     # Process and Gantt chart data structure implementations
     ├── process.h     # Header file for process structures
-    ├── scheduler.c   # Core scheduler logic (FCFS implementation)
+    ├── scheduler.c   # Core scheduler logic (FCFS, SJF, SRTF implementations)
     └── scheduler.h   # Header file for scheduler functions
 ```
 
@@ -29,11 +29,15 @@ cpu-scheduling-visualiser/
 - **Description**: Selects the process with the smallest execution time (burst time).
 - **Characteristics**: Minimizes average waiting time but requires knowing the burst time in advance.
 
-### 3. Priority Scheduling
+### 3. Shortest Remaining Time First (SRTF)
+- **Description**: Preemptive version of SJF. Selects the process with the smallest remaining execution time.
+- **Characteristics**: Preemptive, optimal for average waiting time, but requires tracking remaining time and can lead to starvation.
+
+### 4. Priority Scheduling
 - **Description**: Processes are assigned priorities, and the CPU is allocated to the process with the highest priority.
 - **Characteristics**: Can be preemptive or non-preemptive. Risk of starvation for low-priority processes.
 
-### 4. Round Robin (RR)
+### 5. Round Robin (RR)
 - **Description**: Eeach process is assigned a fixed time unit (quantum). The scheduler cycles through the ready queue.
 - **Characteristics**: Preemptive, fair allocation of CPU, designed for time-sharing systems.
 
@@ -46,7 +50,7 @@ cpu-scheduling-visualiser/
 
 ### Running the C Implementation
 
-The `logic` directory contains a C implementation of the scheduling logic, specifically FCFS.
+The `logic` directory contains a C implementation of the scheduling logic, including FCFS, SJF, and SRTF.
 
 1. Navigate to the `logic` directory:
    ```bash
@@ -69,16 +73,18 @@ The `logic` directory contains a C implementation of the scheduling logic, speci
    Processes initialized:
    PID     AT      BT
    1       0       10
-   2       0       5
-   3       0       8
+   2       1       5
+   3       4       2
 
-   Running FCFS...
+   Enter algorithm (FCFS, SJF, SRTF): SRTF
+
+   Running SRTF...
 
    --- Results ---
    PID     AT      BT      CT      TAT     WT
-   1       0       10      10      10      0
-   2       0       5       15      15      10
-   3       0       8       23      23      15
+   1       0       10      17      17      7
+   2       1       5       6       5       0
+   3       4       2       8       4       2
    ...
    ```
 
