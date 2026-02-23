@@ -1,6 +1,6 @@
 # CPU Scheduling Visualiser
 
-This project implements various CPU scheduling algorithms to visualize and understand their behavior. It includes implementations in both JavaScript (for web-based visualization) and C (for core logic verification).
+This project is a web-based interactive tool developed using React and Vite, designed to visualize and understand the behavior of various CPU scheduling algorithms. It includes implementations JavaScript (for web-based visualization).
 
 ## Project Structure
 
@@ -10,13 +10,18 @@ cpu-scheduling-visualiser/
 │   ├── FCFS.js       # First Come First Serve
 │   ├── Priority.js   # Priority Scheduling
 │   ├── RoundRobin.js # Round Robin
-│   └── SJF.js        # Shortest Job First
-└── logic/            # C implementations and drivers
-    ├── driver.c      # Driver program to run the scheduler
-    ├── process.c     # Process and Gantt chart data structure implementations
-    ├── process.h     # Header file for process structures
-    ├── scheduler.c   # Core scheduler logic (FCFS, SJF, SRTF implementations)
-    └── scheduler.h   # Header file for scheduler functions
+│   ├── SJF.js        # Shortest Job First
+│   ├── SRTF.js       # Shortest Remaining Time First
+│   └── MLFQ.js       # Multi-Level Feedback Queue
+└── src/              # React frontend source code
+    ├── components/   # UI components
+    ├── hooks/        # Custom React hooks
+    ├── context/      # Global state management
+    ├── data/         # Default data models
+    ├── scheduler/    # Frontend algorithm integrations
+    ├── index.css     # Global styles
+    ├── App.jsx       # Main application component
+    └── main.jsx      # Entry point
 ```
 
 ## Algorithms Implemented
@@ -27,7 +32,7 @@ cpu-scheduling-visualiser/
 
 ### 2. Shortest Job First (SJF)
 - **Description**: Selects the process with the smallest execution time (burst time).
-- **Characteristics**: Minimizes average waiting time but requires knowing the burst time in advance.
+- **Characteristics**: Non-preemptive. Minimizes average waiting time but requires knowing the burst time in advance.
 
 ### 3. Shortest Remaining Time First (SRTF)
 - **Description**: Preemptive version of SJF. Selects the process with the smallest remaining execution time.
@@ -38,74 +43,41 @@ cpu-scheduling-visualiser/
 - **Characteristics**: Can be preemptive or non-preemptive. Risk of starvation for low-priority processes.
 
 ### 5. Round Robin (RR)
-- **Description**: Eeach process is assigned a fixed time unit (quantum). The scheduler cycles through the ready queue.
+- **Description**: Each process is assigned a fixed time unit (quantum). The scheduler cycles through the ready queue.
 - **Characteristics**: Preemptive, fair allocation of CPU, designed for time-sharing systems.
+
+### 6. Multi-Level Feedback Queue (MLFQ)
+- **Description**: A complex scheduling structure where processes are dynamically moved between queues of varying priorities based on their CPU usage behavior.
+- **Characteristics**: Preemptive, balances response time and throughput by penalizing long-running CPU-bound processes and prioritizing short, interactive ones.
 
 ## Getting Started
 
 ### Prerequisites
 
-- **C Compiler**: GCC or Clang for running the C logic.
-- **Node.js** (Optional): If you wish to run the JavaScript algorithms in a backend environment, though they are designed as ES6 modules.
+- **Node.js** (v14 or higher recommended)
 
-### Running the C Implementation
+### Running the Web Visualiser
 
-The `logic` directory contains a C implementation of the scheduling logic, including FCFS, SJF, and SRTF.
-
-1. Navigate to the `logic` directory:
+1. Install dependencies:
    ```bash
-   cd logic
+   npm install
    ```
 
-2. Compile the source files:
+2. Start the development server:
    ```bash
-   gcc driver.c scheduler.c process.c -o scheduler_runner
+   npm run dev
    ```
 
-3. Run the executable:
-   ```bash
-   ./scheduler_runner
-   ```
+3. Open your browser and navigate to the local URL provided by Vite.
 
-   **Output Example:**
-   ```
-   --- Scheduler Logic Driver ---
-   Processes initialized:
-   PID     AT      BT
-   1       0       10
-   2       1       5
-   3       4       2
 
-   Enter algorithm (FCFS, SJF, SRTF): SRTF
+## Evaluation Metrics Tracking
 
-   Running SRTF...
-
-   --- Results ---
-   PID     AT      BT      CT      TAT     WT
-   1       0       10      17      17      7
-   2       1       5       6       5       0
-   3       4       2       8       4       2
-   ...
-   ```
-
-### Using the JavaScript Algorithms
-
-The algorithms in the `algorithms` directory are exported as ES6 objects. You can import them into your JavaScript project:
-
-```javascript
-import { FCFS } from './algorithms/FCFS.js';
-
-// Use the algorithm
-const nextProcess = FCFS.selectNext(readyQueue, currentTime);
-```
-
-Each algorithm object provides:
-- `name`: Human-readable name.
-- `shortName`: Abbreviated name.
-- `preemptive`: Boolean indicating if the algorithm is preemptive.
-- `selectNext(readyQueue, currentTime, options)`: Function to determine the next process to run.
-- `shouldPreempt(currentProcess, readyQueue, currentTime)`: Function to check if the current process should be preempted.
+The visualiser tracks and displays the following core metrics for every process:
+- **Completion Time (CT):** The exact time the process finishes execution.
+- **Turnaround Time (TAT):** The total time taken from arrival to completion.
+- **Waiting Time (WT):** The time a process spends waiting in the ready queue.
 
 ## Contributing
 
-Feel free to add more scheduling algorithms or improve the existing implementations.
+Feel free to fork the repository and submit pull requests to add more scheduling algorithms, improve the existing implementations, or enhance the React frontend visualization features.
