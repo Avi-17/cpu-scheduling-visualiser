@@ -1,10 +1,16 @@
 // Priority Scheduling Algorithm (Preemptive)
+import { wasmBridge } from '../../wasm/wasmBridge.js';
+
 export const PriorityPreemptive = {
     name: 'Priority (Preemptive)',
     shortName: 'Priority-P',
     preemptive: true,
 
     selectNext(readyQueue, currentTime, options = {}) {
+        if (wasmBridge.isLoaded) {
+            return wasmBridge.priority.selectNext(readyQueue, currentTime, options);
+        }
+
         if (readyQueue.length === 0) return null;
 
         const available = readyQueue.filter(p => p.arrivalTime <= currentTime);
@@ -22,6 +28,10 @@ export const PriorityPreemptive = {
     },
 
     shouldPreempt(currentProcess, readyQueue, currentTime, options = {}) {
+        if (wasmBridge.isLoaded) {
+            return wasmBridge.priority.shouldPreempt(currentProcess, readyQueue, currentTime, options);
+        }
+
         if (!currentProcess) return false;
 
         const available = readyQueue.filter(p =>

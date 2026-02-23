@@ -1,83 +1,113 @@
 # CPU Scheduling Visualiser
 
-This project is a web-based interactive tool developed using React and Vite, designed to visualize and understand the behavior of various CPU scheduling algorithms. It includes implementations JavaScript (for web-based visualization).
+An interactive web-based simulator built with React to visualize and compare various CPU scheduling algorithms. The application provides an intuitive interface to understand how different scheduling policies affect process execution, wait times, and CPU utilization.
 
-## Project Structure
+## 🌟 Features
 
-```
+- **Multiple Algorithms Supported:**
+  - First Come First Serve (FCFS)
+  - Shortest Job First (SJF)
+  - Shortest Remaining Time First (SRTF / SJF Preemptive)
+  - Priority Scheduling (Preemptive & Non-Preemptive)
+  - Round Robin (RR)
+  - Multi-Level Feedback Queue (MLFQ)
+- **Interactive Visualization:** Real-time Gantt chart generation and process state tracking.
+- **Comparison Mode:** Run two different algorithms side-by-side with the same set of processes to compare their efficiency.
+- **Dynamic Controls:** Adjust time quantum, simulation speed, and process parameters (Arrival Time, Burst Time, Priority) on the fly.
+- **Stress Mode:** Generate a large number of processes to test algorithm performance under load.
+- **Comprehensive Metrics:** Calculates Average Waiting Time, Turnaround Time, Response Time, CPU Utilization, and Throughput.
+
+## 🛠️ Tech Stack
+
+- **Frontend:** React 18, Vite
+- **State Management:** React Context API
+- **Styling:** Vanilla CSS (`index.css`)
+- **Core Engine:** Custom Scheduling Engine with **WASM-first, JS-fallback** architecture
+- **WASM Layer:** C implementations compiled to WebAssembly via Emscripten (`src/wasm/`)
+
+## 📁 Project Structure
+
+```text
 cpu-scheduling-visualiser/
-├── algorithms/       # JavaScript implementations of scheduling algorithms
-│   ├── FCFS.js       # First Come First Serve
-│   ├── Priority.js   # Priority Scheduling
-│   ├── RoundRobin.js # Round Robin
-│   ├── SJF.js        # Shortest Job First
-│   ├── SRTF.js       # Shortest Remaining Time First
-│   └── MLFQ.js       # Multi-Level Feedback Queue
-└── src/              # React frontend source code
-    ├── components/   # UI components
-    ├── hooks/        # Custom React hooks
-    ├── context/      # Global state management
-    ├── data/         # Default data models
-    ├── scheduler/    # Frontend algorithm integrations
-    ├── index.css     # Global styles
-    ├── App.jsx       # Main application component
-    └── main.jsx      # Entry point
+├── src/
+│   ├── components/       # React UI components (Gantt Chart, Controls, Metrics)
+│   ├── context/          # SchedulerContext for global state management
+│   ├── scheduler/        # Core execution engine
+│   │   ├── algorithms/   # WASM-first wrappers with JS fallback for each algorithm
+│   │   ├── Scheduler.js  # Main simulation loop and dispatcher
+│   │   └── Process.js    # Process data models
+│   ├── wasm/             # WebAssembly layer
+│   │   ├── algorithms.c  # All scheduling algorithms in C
+│   │   ├── wasmBridge.js # JS ↔ WASM marshalling bridge
+│   │   ├── algorithms.js # (generated) Emscripten glue code
+│   │   └── algorithms.wasm # (generated) Compiled WASM binary
+│   ├── App.jsx           # Main application wrapper
+│   └── main.jsx          # Entry point
+├── build-wasm.sh         # Script to compile C → WASM via Emscripten
+├── algorithms/           # Legacy standalone JavaScript implementations
+└── package.json          # Project metadata and scripts
 ```
 
-## Algorithms Implemented
-
-### 1. First Come First Serve (FCFS)
-- **Description**: Processes are executed in the order they arrive in the ready queue.
-- **Characteristics**: Non-preemptive, simple to implement, but can lead to the convoy effect.
-
-### 2. Shortest Job First (SJF)
-- **Description**: Selects the process with the smallest execution time (burst time).
-- **Characteristics**: Non-preemptive. Minimizes average waiting time but requires knowing the burst time in advance.
-
-### 3. Shortest Remaining Time First (SRTF)
-- **Description**: Preemptive version of SJF. Selects the process with the smallest remaining execution time.
-- **Characteristics**: Preemptive, optimal for average waiting time, but requires tracking remaining time and can lead to starvation.
-
-### 4. Priority Scheduling
-- **Description**: Processes are assigned priorities, and the CPU is allocated to the process with the highest priority.
-- **Characteristics**: Can be preemptive or non-preemptive. Risk of starvation for low-priority processes.
-
-### 5. Round Robin (RR)
-- **Description**: Each process is assigned a fixed time unit (quantum). The scheduler cycles through the ready queue.
-- **Characteristics**: Preemptive, fair allocation of CPU, designed for time-sharing systems.
-
-### 6. Multi-Level Feedback Queue (MLFQ)
-- **Description**: A complex scheduling structure where processes are dynamically moved between queues of varying priorities based on their CPU usage behavior.
-- **Characteristics**: Preemptive, balances response time and throughput by penalizing long-running CPU-bound processes and prioritizing short, interactive ones.
-
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
+- [Node.js](https://nodejs.org/) (v16 or higher recommended)
 
-- **Node.js** (v14 or higher recommended)
+### Installation & Running Locally
 
-### Running the Web Visualiser
+1. **Clone the repository and navigate to the directory:**
+   ```bash
+   cd cpu-scheduling-visualiser
+   ```
 
-1. Install dependencies:
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. Start the development server:
+3. **Start the development server:**
    ```bash
    npm run dev
    ```
 
-3. Open your browser and navigate to the local URL provided by Vite.
+4. **Build for production:**
+   ```bash
+   npm run build
+   ```
 
+## 🧠 How the Engine Works
 
-## Evaluation Metrics Tracking
+The core of the simulator is the `Scheduler` class (in `src/scheduler/Scheduler.js`), which operates on a simulated clock tick using `requestAnimationFrame`. 
 
-The visualiser tracks and displays the following core metrics for every process:
-- **Completion Time (CT):** The exact time the process finishes execution.
-- **Turnaround Time (TAT):** The total time taken from arrival to completion.
-- **Waiting Time (WT):** The time a process spends waiting in the ready queue.
+1. **Tick Execution:** At each interval, the scheduler checks for newly arrived processes.
+2. **Preemption:** The active algorithm evaluates if the current process should be preempted (e.g., time quantum expired in RR).
+3. **Selection:** The most eligible process in the ready queue is selected based on the algorithm's specific rules.
+4. **Metrics:** The Context API listens to engine events and updates the UI in real time to reflect running, waiting, and completed processes.
 
-## Contributing
+## ⚡ WebAssembly (WASM) Integration
 
-Feel free to fork the repository and submit pull requests to add more scheduling algorithms, improve the existing implementations, or enhance the React frontend visualization features.
+All scheduling algorithms have full C implementations in `src/wasm/algorithms.c`. The app uses a **WASM-first, JS-fallback** architecture — when compiled, the algorithms run at near-native speed via WebAssembly; without a build, the app falls back to equivalent JavaScript implementations seamlessly.
+
+### Building WASM
+
+**Prerequisite:** [Emscripten SDK](https://emscripten.org/) (`brew install emscripten`)
+
+```bash
+# Compile C → WASM (generates src/wasm/algorithms.js + algorithms.wasm)
+./build-wasm.sh
+
+# Or build everything for production (runs build-wasm.sh automatically)
+npm run build
+```
+
+When WASM is loaded, the browser console shows `✅ WASM scheduling algorithms loaded successfully`.  
+Without WASM, it shows `⚠️ WASM module not available, using JS fallback` — the app works identically either way.
+
+## 🤝 Contributing
+
+Contributions are welcome! If you'd like to add a new algorithm or improve the UI:
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/NewAlgorithm`).
+3. Commit your changes (`git commit -m 'Add NewAlgorithm'`).
+4. Push to the branch (`git push origin feature/NewAlgorithm`).
+5. Open a Pull Request.

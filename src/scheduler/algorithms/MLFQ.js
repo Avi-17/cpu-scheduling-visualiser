@@ -1,13 +1,15 @@
 // Multi-Level Feedback Queue Scheduling Algorithm
+import { wasmBridge } from '../../wasm/wasmBridge.js';
+
 export const MLFQ = {
     name: 'Multi-Level Feedback Queue',
     shortName: 'MLFQ',
     preemptive: true,
 
-    // Internal state: track which queue level each process is in
+    // JS fallback state
     processQueueLevel: new Map(),
     timeSliceUsed: new Map(),
-    waitingSince: new Map(), // For aging: track when a process started waiting
+    waitingSince: new Map(),
 
     getQueueQuantum(level, options = {}) {
         const quantums = options.mlfqQuantums ?? [2, 4, 8];
@@ -19,10 +21,17 @@ export const MLFQ = {
     },
 
     getProcessLevel(processId) {
+        if (wasmBridge.isLoaded) {
+            return wasmBridge.mlfq.getProcessLevel(processId);
+        }
         return this.processQueueLevel.get(processId) ?? 0;
     },
 
     selectNext(readyQueue, currentTime, options = {}) {
+        if (wasmBridge.isLoaded) {
+            return wasmBridge.mlfq.selectNext(readyQueue, currentTime, options);
+        }
+
         if (readyQueue.length === 0) return null;
 
         const available = readyQueue.filter(p => p.arrivalTime <= currentTime);
@@ -55,41 +64,41 @@ export const MLFQ = {
         // Select from highest priority queue (lowest number) first
         for (let level = 0; level < numQueues; level++) {
             const levelProcesses = available.filter(p =>
-                this.getProcessLevel(p.id) === level
+                (this.processQueueLevel.get(p.id) ?? 0) === level
             );
 
             if (levelProcesses.length > 0) {
-                // Within same level, use FCFS (arrival time order)
                 levelProcesses.sort((a, b) => a.arrivalTime - b.arrivalTime);
                 return levelProcesses[0];
             }
         }
 
-        // Fallback: any remaining process (shouldn't reach here)
         return available[0];
     },
 
     shouldPreempt(currentProcess, readyQueue, currentTime, options = {}) {
+        if (wasmBridge.isLoaded) {
+            return wasmBridge.mlfq.shouldPreempt(currentProcess, readyQueue, currentTime, options);
+        }
+
         if (!currentProcess) return false;
 
-        const currentLevel = this.getProcessLevel(currentProcess.id);
+        const currentLevel = this.processQueueLevel.get(currentProcess.id) ?? 0;
         const quantum = this.getQueueQuantum(currentLevel, options);
         const used = this.timeSliceUsed.get(currentProcess.id) || 0;
 
-        // Preempt if time quantum for current queue is exhausted
         if (used >= quantum) {
             return true;
         }
 
-        // Preempt if a higher-priority queue has a process ready
         const available = readyQueue.filter(p =>
             p.arrivalTime <= currentTime && p.id !== currentProcess.id
         );
 
         for (const p of available) {
-            const pLevel = this.getProcessLevel(p.id);
+            const pLevel = this.processQueueLevel.get(p.id) ?? 0;
             if (pLevel < currentLevel) {
-                return true; // Higher priority queue process arrived
+                return true;
             }
         }
 
@@ -97,38 +106,46 @@ export const MLFQ = {
     },
 
     onTick(process, options = {}) {
+        if (wasmBridge.isLoaded) {
+            wasmBridge.mlfq.onTick(process);
+            return;
+        }
+
         if (!process) return;
 
         const current = this.timeSliceUsed.get(process.id) || 0;
         this.timeSliceUsed.set(process.id, current + 1);
 
-        // Track queue level for Gantt metadata
         if (!this.processQueueLevel.has(process.id)) {
             this.processQueueLevel.set(process.id, 0);
         }
     },
 
     onContextSwitch(newProcess, options = {}) {
+        if (wasmBridge.isLoaded) {
+            wasmBridge.mlfq.onContextSwitch(newProcess, options);
+            return;
+        }
+
         if (!newProcess) return;
 
         const prevUsed = this.timeSliceUsed.get(newProcess.id) || 0;
-        const currentLevel = this.getProcessLevel(newProcess.id);
+        const currentLevel = this.processQueueLevel.get(newProcess.id) ?? 0;
         const quantum = this.getQueueQuantum(currentLevel, options);
         const numQueues = this.getNumQueues(options);
 
-        // If previous quantum was exhausted, demote to lower priority queue
         if (prevUsed >= quantum && currentLevel < numQueues - 1) {
             this.processQueueLevel.set(newProcess.id, currentLevel + 1);
         }
 
-        // Reset time slice for the new context
         this.timeSliceUsed.set(newProcess.id, 0);
-
-        // Update waiting timestamps for aging
         this.waitingSince.set(newProcess.id, undefined);
     },
 
     reset() {
+        if (wasmBridge.isLoaded) {
+            wasmBridge.mlfq.reset();
+        }
         this.processQueueLevel.clear();
         this.timeSliceUsed.clear();
         this.waitingSince.clear();

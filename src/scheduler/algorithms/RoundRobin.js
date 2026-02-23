@@ -1,14 +1,20 @@
 // Round Robin Scheduling Algorithm
+import { wasmBridge } from '../../wasm/wasmBridge.js';
+
 export const RoundRobin = {
     name: 'Round Robin',
     shortName: 'RR',
     preemptive: true,
 
-    // Track time slice usage per process
+    // JS fallback state
     timeSliceUsed: new Map(),
     lastProcess: null,
 
     selectNext(readyQueue, currentTime, options = {}) {
+        if (wasmBridge.isLoaded) {
+            return wasmBridge.rr.selectNext(readyQueue, currentTime, options);
+        }
+
         const quantum = options.quantum ?? 3;
 
         if (readyQueue.length === 0) return null;
@@ -25,7 +31,6 @@ export const RoundRobin = {
         }
 
         // Round robin: rotate through processes
-        // Find the next process after the last one
         if (this.lastProcess) {
             const lastIndex = available.findIndex(p => p.id === this.lastProcess.id);
             if (lastIndex !== -1 && available.length > 1) {
@@ -38,16 +43,24 @@ export const RoundRobin = {
     },
 
     shouldPreempt(currentProcess, readyQueue, currentTime, options = {}) {
+        if (wasmBridge.isLoaded) {
+            return wasmBridge.rr.shouldPreempt(currentProcess, readyQueue, currentTime, options);
+        }
+
         if (!currentProcess) return false;
 
         const quantum = options.quantum ?? 3;
         const used = this.timeSliceUsed.get(currentProcess.id) || 0;
 
-        // Preempt if time quantum is exhausted
         return used >= quantum;
     },
 
     onTick(process, options = {}) {
+        if (wasmBridge.isLoaded) {
+            wasmBridge.rr.onTick(process);
+            return;
+        }
+
         if (!process) return;
 
         const current = this.timeSliceUsed.get(process.id) || 0;
@@ -56,7 +69,11 @@ export const RoundRobin = {
     },
 
     onContextSwitch(newProcess, options = {}) {
-        // Reset time slice for new process
+        if (wasmBridge.isLoaded) {
+            wasmBridge.rr.onContextSwitch(newProcess);
+            return;
+        }
+
         if (newProcess) {
             this.timeSliceUsed.set(newProcess.id, 0);
         }
@@ -64,6 +81,9 @@ export const RoundRobin = {
     },
 
     reset() {
+        if (wasmBridge.isLoaded) {
+            wasmBridge.rr.reset();
+        }
         this.timeSliceUsed.clear();
         this.lastProcess = null;
     }
